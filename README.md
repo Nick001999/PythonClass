@@ -1,1 +1,2 @@
-# PythonClass Nikolai Karabakin Python Midterm.
+# PythonClass Nikolai Karabakin.
+
