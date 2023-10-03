@@ -1,0 +1,85 @@
+import csv
+import random
+from faker import Faker
+from datetime import datetime, timedelta
+
+def generate_fake_data(num_accounts):
+    fake = Faker()
+    data = []
+
+    for i in range(1000, 1000 + num_accounts):
+        plan = random.choice(["free", "basic", "full"])
+        username = fake.user_name()
+        last_login_date = fake.date_between(start_date="-2y", end_date="today")
+
+        if plan != "free":
+            expire_date = fake.date_between(start_date="today", end_date="+1y")
+        else:
+            expire_date = None
+
+        data.append([i, plan, username, last_login_date, expire_date])
+
+    return data
+
+def save_to_csv(data, filename):
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["id", "plan", "username", "last_login_date", "expire_date"])
+        writer.writerows(data)
+
+def load_from_csv(filename):
+    data = []
+    with open(filename, mode='r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            data.append(row)
+    return data
+
+def print_total_accounts_per_plan(data):
+    plan_counts = {"free": 0, "basic": 0, "full": 0}
+    for row in data:
+        plan_counts[row["plan"]] += 1
+    for plan, count in plan_counts.items():
+        print(f"{plan.capitalize()}: {count}")
+
+def find_free_accounts_with_more_than_3_months(data):
+    today = datetime.now()
+    for row in data:
+        if row["plan"] == "free" and row["last_login_date"]:
+            last_login_date = datetime.strptime(row["last_login_date"], "%Y-%m-%d")
+            if (today - last_login_date).days > 90:
+                print(f"Username: {row['username']}, Last Login: {row['last_login_date']}")
+
+def find_expired_basic_or_full_accounts(data):
+    today = datetime.now()
+    for row in data:
+        if row["plan"] in ["basic", "full"] and row["expire_date"]:
+            expire_date = datetime.strptime(row["expire_date"], "%Y-%m-%d")
+            if today > expire_date:
+                print(f"Username: {row['username']}, Expire Date: {row['expire_date']}")
+
+if __name__ == "__main__":
+    num_accounts = 1000
+    generated_data = generate_fake_data(num_accounts)
+    save_to_csv(generated_data, "accounts.csv")
+
+    accounts_data = load_from_csv("accounts.csv")
+
+    while True:
+        print("\nMenu:")
+        print("1. Total accounts per plan")
+        print("2. Free accounts with more than 3 months no login")
+        print("3. Expired basic/full accounts")
+        print("4. Exit")
+        choice = input("Select an option: ")
+
+        if choice == "1":
+            print_total_accounts_per_plan(accounts_data)
+        elif choice == "2":
+            find_free_accounts_with_more_than_3_months(accounts_data)
+        elif choice == "3":
+            find_expired_basic_or_full_accounts(accounts_data)
+        elif choice == "4":
+            break
+        else:
+            print("Invalid choice. Try again.")
